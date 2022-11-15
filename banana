@@ -1,0 +1,75 @@
+#!/bin/bash
+
+if [[ $1 == "--remove" ]];then
+    sudo rm /usr/local/bin/banana
+    exit 0
+    
+fi
+
+function installchk {
+    if ! command -v banana &> /dev/null
+    then
+        sudo cp banana /usr/local/bin
+    fi
+
+}
+
+function distrochk() {
+    if [[ -f /etc/os-release ]]
+    then
+        source /etc/os-release
+        echo $ID
+    else
+        uname
+    fi
+}
+
+function gdepend {
+
+  if ! command -v yad &> /dev/null
+  then
+    case $(distrochk) in 
+        fedora)
+            sudo dnf -y install yad
+            ;;
+        ubuntu)
+            sudo apt-get install -y yad
+            ;;
+        debian)
+            sudo apt-get install -y yad
+            ;;
+    esac   
+  fi
+
+}
+
+function mainrun {
+
+    PKG=`yad --file \
+    --width=600 --height=400 \
+    --title "banana" \
+    --text "Select package to install" --text-align=center` 
+    if [[ -z $PKG ]];then
+        exit 1
+    else 
+        case $(distrochk) in 
+            fedora)
+                echo $(yad --text-align=center --title "banana" --text="Enter Sudo password" --entry --hide-text) | sudo -S dnf localinstall $PKG
+                ;;
+            ubuntu)
+                echo $(yad --text-align=center --title "banana" --text="Enter Sudo password" --entry --hide-text) | sudo -S dpkg -i $PKG
+                sudo apt-get -f install
+                ;;
+            debian)
+                echo $(yad --text-align=center --title "banana" --text="Enter Sudo password" --entry --hide-text) | sudo -S dpkg -i $PKG
+                sudo apt-get -f install
+                ;;
+        esac 
+    fi
+
+}
+
+
+installchk
+gdepend
+mainrun
